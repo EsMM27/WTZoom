@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -13,11 +14,11 @@ namespace WarThunderZoom
         private ScreenCapture screenCapture;
         private GlobalKeyboardHook hook;
         private bool isTogglingVisibility = false;
+        private Bitmap currentBitmap;
 
         public MainWindow()
         {
             InitializeComponent();
-
 
             screenCapture = new ScreenCapture();
 
@@ -26,8 +27,6 @@ namespace WarThunderZoom
             timer.Interval = TimeSpan.FromMilliseconds(20); // Capture interval
             timer.Tick += Timer_Tick;
             timer.Start();
-
-            
 
             // Set up global key listener
             hook = new GlobalKeyboardHook();
@@ -40,27 +39,24 @@ namespace WarThunderZoom
             base.OnContentRendered(e);
 
             // Set the position of the window after it is rendered (offset to the right and up)
-            this.Left = (SystemParameters.WorkArea.Width / 2) - (this.Width / 2) + 350; // Offset right by 200
-            this.Top = (SystemParameters.WorkArea.Height / 2) - (this.Height / 2) - 200; // Offset up by 100
+            this.Left = (SystemParameters.WorkArea.Width / 2) - (this.Width / 2) + 350; // Offset right by 350
+            this.Top = (SystemParameters.WorkArea.Height / 2) - (this.Height / 2) - 200; // Offset up by 200
         }
 
-        private void Timer_Tick(object sender, EventArgs e)
+        private async void Timer_Tick(object sender, EventArgs e)
         {
-
             var left = (SystemParameters.WorkArea.Width / 2);
             var top = (SystemParameters.WorkArea.Height / 2);
 
-
-            //get the center of the screen
+            // Get the center of the screen
             left = left - 56;
             top = top - 50;
-
 
             // Define the area to capture (X, Y, Width, Height)
             Rectangle captureRectangle = new Rectangle((int)left, (int)top, 112, 200);
 
-            // Capture the screen
-            Bitmap bitmap = screenCapture.CaptureScreen(captureRectangle);
+            // Capture the screen asynchronously
+            Bitmap bitmap = await Task.Run(() => screenCapture.CaptureScreen(captureRectangle));
 
             // Display the bitmap in the Image control
             previewImage.Source = BitmapToImageSource(bitmap);
